@@ -2,7 +2,10 @@ cff-version: 1.2.0
 message: If you use this software, please cite it using these metadata.
 title: test
 authors:
-    - family-names: Li
-      given-names: Chin Yeung
+- family-names: Li
+  given-names: Chin Yeung
 license: Apache-2.0
-url: 'https://github.com/chinyeungli/test_repo/'
+url: https://github.com/chinyeungli/test_repo/
+doi: 10.5281/zenodo.16390052
+version: 0.02pre5
+date-released: 2025-07-24
