@@ -36,4 +36,4 @@ jobs:
                   git config user.email "github-actions@github.com"
                   git add CITATION.cff
                   git commit -m "Update CITATION.cff with latest Zenodo DOI"
-                  git push
+                  git push origin HEAD:master
