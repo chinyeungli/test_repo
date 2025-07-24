@@ -37,7 +37,7 @@ jobs:
               run: |
                   # The Python script should print only the DOI to standard output.
                   # We capture that output and set it as a step output.
-                  ZENODO_DOI=$(python etc/scripts/fetch_latest_doi.py)
+                  ZENODO_DOI=$(python scripts/fetch_latest_doi.py)
                   echo "ZENODO_DOI=${ZENODO_DOI}" >> "$GITHUB_OUTPUT"
                   echo "Latest DOI fetched: ${ZENODO_DOI}"
 
