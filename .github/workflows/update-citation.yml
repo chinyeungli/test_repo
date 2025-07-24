@@ -1,4 +1,4 @@
-name: Auto-update CITATION.cff (setup.cfg-based)
+name: Auto-update CITATION.cff
 
 on:
     release:
@@ -36,10 +36,11 @@ jobs:
               env:
                   ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
               run: |
-                  echo "doi=$(python scripts/fetch_latest_doi.py)" >> "$GITHUB_OUTPUT"
+                  python scripts/fetch_latest_doi.py > latest_doi.txt
+                  echo "Latest DOI: $(cat latest_doi.txt)"
 
             - name: Update CITATION.cff
-              run: doi2cff update ${{ steps.fetch-doi.outputs.doi }}
+              run: doi2cff update $(cat latest_doi.txt)
 
             - name: Commit updated CITATION.cff
               run: |
@@ -59,7 +60,5 @@ jobs:
                       'Update CITATION.cff for ${{ github.event.release.tag_name
                       }}'
                   body: |
-                      Automated update of `CITATION.cff` using latest Zenodo DOI:
-                      - Release: ${{ github.event.release.tag_name }}
-                      - DOI: ${{ steps.fetch-doi.outputs.doi }}
+                      Automated update of `CITATION.cff` using latest Zenodo DOI
                   commit-message: 'Update CITATION.cff with latest Zenodo DOI'
