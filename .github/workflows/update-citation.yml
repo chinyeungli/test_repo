@@ -4,6 +4,11 @@ on:
     release:
         types: [published]
 
+# Add permissions for the workflow
+permissions:
+    contents: read # Required for creating branches and committing changes
+    pull-requests: write # Required for creating the pull request and setting its body
+
 jobs:
     update-citation:
         runs-on: ubuntu-24.04
