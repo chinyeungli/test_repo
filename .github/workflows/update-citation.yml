@@ -16,9 +16,6 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
-              with:
-                  # Fetch all history for create-pull-request action to work correctly
-                  fetch-depth: 0
 
             - name: Set up Python ${{ matrix.python-version }}
               uses: actions/setup-python@v5
@@ -35,11 +32,8 @@ jobs:
               env:
                   ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
               run: |
-                  # The Python script should print only the DOI to standard output.
-                  # We capture that output and set it as a step output.
                   ZENODO_DOI=$(python scripts/fetch_latest_doi.py)
                   echo "ZENODO_DOI=${ZENODO_DOI}" >> "$GITHUB_OUTPUT"
-                  echo "Latest DOI fetched: ${ZENODO_DOI}"
 
             - name: Update CITATION.cff
               # Use the output from the 'get-doi' step as the argument for doi2cff
@@ -48,21 +42,15 @@ jobs:
             - name: Create Pull Request
               uses: peter-evans/create-pull-request@v6
               with:
-                  # Use the default GITHUB_TOKEN for authentication
                   token: ${{ secrets.GITHUB_TOKEN }}
-                  # The base branch for the pull request
                   base: develop
-                  # The new branch to create for the pull request
-                  branch: auto-update-citation-cff-pr
-                  # Commit message for the changes
+                  branch: update-citation-${{ github.event.release.tag_name }}
                   commit-message:
-                      'Automated: Update CITATION.cff with latest Zenodo DOI'
-                  # Title of the pull request
+                      'Automated: Update CITATION.cff with the latest Zenodo DOI'
                   title: 'Automated: Update CITATION.cff'
-                  # Body of the pull request
                   body: |
                       This is an automated pull request to update the `CITATION.cff` file
-                      with the latest Zenodo DOI fetched from your Zenodo repository.
+                      with the latest Zenodo DOI fetched from Zenodo repository.
                   # Set to true to automatically merge the PR if all checks pass (optional)
                   # automerge: true
                   # Set to true to delete the branch after merging (optional)
