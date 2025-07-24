@@ -1,6 +1,8 @@
 name: Auto-update CITATION.cff
 
-on: [push, pull_request]
+on:
+    release:
+        types: [published]
 
 jobs:
     update-citation:
@@ -14,6 +16,9 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
+              with:
+                  # Fetch all history for create-pull-request action to work correctly
+                  fetch-depth: 0
 
             - name: Set up Python ${{ matrix.python-version }}
               uses: actions/setup-python@v5
@@ -25,39 +30,40 @@ jobs:
                   pip install
                   git+https://github.com/citation-file-format/doi2cff
 
-            - name: Create and switch to PR branch
-              run: |
-                  git checkout -b update-citation-${{ github.event.release.tag_name }}
-
             - name: Fetch latest Zenodo DOI
-              id: fetch-doi
+              id: get-doi # Assign an ID to this step to reference its outputs
               env:
                   ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
               run: |
-                  DOI=$(python scripts/fetch_latest_doi.py)
-                  echo "$DOI" > latest_doi.txt
-                  echo "doi=$DOI" >> "$GITHUB_OUTPUT"
+                  # The Python script should print only the DOI to standard output.
+                  # We capture that output and set it as a step output.
+                  ZENODO_DOI=$(python etc/scripts/fetch_latest_doi.py)
+                  echo "ZENODO_DOI=${ZENODO_DOI}" >> "$GITHUB_OUTPUT"
+                  echo "Latest DOI fetched: ${ZENODO_DOI}"
 
             - name: Update CITATION.cff
-              run: doi2cff update ${{ steps.fetch-doi.outputs.doi }}
-
-            - name: Commit updated CITATION.cff
-              run: |
-                  git config user.name "github-actions"
-                  git config user.email "github-actions@github.com"
-                  git add CITATION.cff
-                  git commit -m "Update CITATION.cff with latest Zenodo DOI"
-                  git push origin update-citation-${{ github.event.release.tag_name }}
+              # Use the output from the 'get-doi' step as the argument for doi2cff
+              run: doi2cff update ${{ steps.get-doi.outputs.ZENODO_DOI }}
 
             - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v5
+              uses: peter-evans/create-pull-request@v6
               with:
+                  # Use the default GITHUB_TOKEN for authentication
                   token: ${{ secrets.GITHUB_TOKEN }}
-                  branch: update-citation-${{ github.event.release.tag_name }}
-                  base: master
-                  title:
-                      'Update CITATION.cff for ${{ github.event.release.tag_name
-                      }}'
+                  # The base branch for the pull request
+                  base: develop
+                  # The new branch to create for the pull request
+                  branch: auto-update-citation-cff-pr
+                  # Commit message for the changes
+                  commit-message:
+                      'Automated: Update CITATION.cff with latest Zenodo DOI'
+                  # Title of the pull request
+                  title: 'Automated: Update CITATION.cff'
+                  # Body of the pull request
                   body: |
-                      Automated update of `CITATION.cff` using latest Zenodo DOI
-                  commit-message: 'Update CITATION.cff with latest Zenodo DOI'
+                      This is an automated pull request to update the `CITATION.cff` file
+                      with the latest Zenodo DOI fetched from your Zenodo repository.
+                  # Set to true to automatically merge the PR if all checks pass (optional)
+                  # automerge: true
+                  # Set to true to delete the branch after merging (optional)
+                  # delete-branch: true
