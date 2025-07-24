@@ -6,19 +6,30 @@ on:
 
 jobs:
     update-citation:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
+        runs-on: ubuntu-24.04
 
-            - name: Set up Python
-              uses: actions/setup-python@v4
+        strategy:
+            max-parallel: 4
+            matrix:
+                python-version: [3.13]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v5
               with:
-                  python-version: '3.x'
+                  python-version: ${{ matrix.python-version }}
 
             - name: Install doi2cff
               run:
                   pip install
                   git+https://github.com/citation-file-format/doi2cff
+
+            - name: Create and switch to PR branch
+              run: |
+                  git checkout -b update-citation-${{ github.event.release.tag_name }}
 
             - name: Fetch latest Zenodo DOI
               env:
@@ -36,4 +47,18 @@ jobs:
                   git config user.email "github-actions@github.com"
                   git add CITATION.cff
                   git commit -m "Update CITATION.cff with latest Zenodo DOI"
-                  git push origin HEAD:master
+                  git push origin update-citation-${{ github.event.release.tag_name }}
+
+            - name: Create Pull Request
+              uses: peter-evans/create-pull-request@v5
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  branch: update-citation-${{ github.event.release.tag_name }}
+                  base: master
+                  title:
+                      'Update CITATION.cff for ${{ github.event.release.tag_name
+                      }}'
+                  body: |
+                      Automated update of `CITATION.cff` using latest Zenodo DOI:
+                      - Release: ${{ github.event.release.tag_name }}
+                      - DOI: $(cat latest_doi.txt)
