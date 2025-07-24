@@ -36,11 +36,12 @@ jobs:
               env:
                   ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
               run: |
-                  python scripts/fetch_latest_doi.py > latest_doi.txt
-                  echo "Latest DOI: $(cat latest_doi.txt)"
+                  DOI=$(python scripts/fetch_latest_doi.py)
+                  echo "$DOI" > latest_doi.txt
+                  echo "doi=$DOI" >> "$GITHUB_OUTPUT"
 
             - name: Update CITATION.cff
-              run: doi2cff update $(cat latest_doi.txt)
+              run: doi2cff update ${{ steps.fetch-doi.outputs.doi }}
 
             - name: Commit updated CITATION.cff
               run: |
