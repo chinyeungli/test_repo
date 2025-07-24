@@ -32,11 +32,11 @@ jobs:
                   git checkout -b update-citation-${{ github.event.release.tag_name }}
 
             - name: Fetch latest Zenodo DOI
+              id: fetch-doi
               env:
                   ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
               run: |
-                  python scripts/fetch_latest_doi.py > latest_doi.txt
-                  echo "Latest DOI: $(cat latest_doi.txt)"
+                  echo "doi=$(python scripts/fetch_latest_doi.py)" >> "$GITHUB_OUTPUT"
 
             - name: Update CITATION.cff
               run: doi2cff update $(cat latest_doi.txt)
@@ -61,4 +61,5 @@ jobs:
                   body: |
                       Automated update of `CITATION.cff` using latest Zenodo DOI:
                       - Release: ${{ github.event.release.tag_name }}
-                      - DOI: $(cat latest_doi.txt)
+                      - DOI: ${{ steps.fetch-doi.outputs.doi }}
+                  commit-message: 'Update CITATION.cff with latest Zenodo DOI'
