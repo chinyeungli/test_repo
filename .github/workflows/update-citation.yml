@@ -39,7 +39,7 @@ jobs:
                   echo "doi=$(python scripts/fetch_latest_doi.py)" >> "$GITHUB_OUTPUT"
 
             - name: Update CITATION.cff
-              run: doi2cff update $(cat latest_doi.txt)
+              run: doi2cff update ${{ steps.fetch-doi.outputs.doi }}
 
             - name: Commit updated CITATION.cff
               run: |
